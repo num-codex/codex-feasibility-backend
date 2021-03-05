@@ -30,7 +30,7 @@ class FeasibilityGuiBackendApplicationTests {
 
   @Test
   public void queryBuilder() {
-    var queryService = new QueryBuilderService();
+    var queryService = new QueryBuilderService("8090");
     var cqlBuilder = new QueryBuilderCQL();
     var fhirBuilder = new QueryBuilderFHIR();
     Assertions.assertEquals("FHIRQuery", queryService.getQueryContent(fhirBuilder));

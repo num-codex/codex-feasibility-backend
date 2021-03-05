@@ -4,18 +4,15 @@ import de.numcodex.feasibility_gui_backend.model.query.QueryDefinition;
 import de.numcodex.feasibility_gui_backend.model.query.QueryResult;
 import de.numcodex.feasibility_gui_backend.model.query.ResultLocation;
 import de.numcodex.feasibility_gui_backend.service.QueryBuilderService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /*
  Rest Interface for the UI to send queries from the ui to the ui backend.
  */
 
-@RequestMapping("api/v1/queryBuilder")
+@RequestMapping("api/v1/querybuilder")
 @RestController
+@CrossOrigin
 public class QueryBuilderRestController {
 
   private final QueryBuilderService queryBuilderService;
@@ -25,13 +22,13 @@ public class QueryBuilderRestController {
   }
 
 
-  @PostMapping
+  @PostMapping("run-query")
   public ResultLocation runQuery(QueryDefinition query) {
     return queryBuilderService.runQuery(query);
   }
 
-  @GetMapping(path = "{resultLocation}")
-  public QueryResult getQueryResult(@PathVariable("resultLocation") ResultLocation resultLocation) {
+  @GetMapping(path = "result/{resultLocation}")
+  public QueryResult getQueryResult(@PathVariable("resultLocation") String resultLocation) {
     return queryBuilderService.getQueryResult(resultLocation);
   }
 
