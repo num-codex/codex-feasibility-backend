@@ -13,6 +13,11 @@ public class CategoryEntry {
     this.display = display;
   }
 
+  public CategoryEntry(TerminologyEntry terminologyEntry) {
+    this.catId = terminologyEntry.getId();
+    this.display = terminologyEntry.getDisplay();
+  }
+
   public String getDisplay() {
     return display;
   }

@@ -44,7 +44,14 @@ public class TerminologyRestController {
 
   @GetMapping("selectable-entries")
   public List<TerminologyEntry> getSelectableEntries(@RequestParam("query") String query,
-      @RequestParam(value = "categoryId", required = false) UUID categoryId) {
-    return terminologyService.getSelectableEntries(query, categoryId);
+      @RequestParam(value = "categoryId", required = false) String categoryId) {
+    UUID categoryUuid = null;
+    try {
+      // TODO: Use String (instead of UUID) to be fault tolerant
+      categoryUuid = UUID.fromString(categoryId);
+    } catch (Exception e) {
+      // use null
+    }
+    return terminologyService.getSelectableEntries(query, categoryUuid);
   }
 }

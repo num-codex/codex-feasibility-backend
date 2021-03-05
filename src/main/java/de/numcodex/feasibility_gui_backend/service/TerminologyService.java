@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.numcodex.feasibility_gui_backend.model.ui.CategoryEntry;
 import de.numcodex.feasibility_gui_backend.model.ui.TerminologyEntry;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -17,13 +19,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class TerminologyService {
 
-  private  String uiProfilePath;
-  private static final List<String> SORTED_CATEGORIES = List.of("Anamnese / Risikofaktoren", "Demographie",
-      "Laborwerte", "Therapie", "Andere");
-  private Map<UUID, TerminologyEntry> terminologyEntries = new HashMap<>();
-  private List<CategoryEntry> categoryEntries = new ArrayList<>();
-  private Map<UUID, TerminologyEntry> terminologyEntriesWithOnlyDirectChildren = new HashMap<>();
-  private Map<UUID, Set<TerminologyEntry>> selectableEntriesByCategory = new HashMap<>();
+  private final String uiProfilePath;
+  private static final List<String> SORTED_CATEGORIES =
+      List.of("Anamnese / Risikofaktoren", "Demographie", "Laborwerte", "Therapie", "Andere");
+  private final Map<UUID, TerminologyEntry> terminologyEntries = new HashMap<>();
+  private final List<CategoryEntry> categoryEntries = new ArrayList<>();
+  private final Map<UUID, TerminologyEntry> terminologyEntriesWithOnlyDirectChildren =
+      new HashMap<>();
+  private final Set<TerminologyEntryWithCategory> selectableEntriesWithCategory = new HashSet<>();
 
   public TerminologyService(@Value("${backend.ontology-folder}") String uiProfilePath) {
     this.uiProfilePath = uiProfilePath;
@@ -39,12 +42,10 @@ public class TerminologyService {
       var objectMapper = new ObjectMapper();
       objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
       try {
-        var terminology_entry = (objectMapper.readValue(
-            new URL("file:" + uiProfilePath + "/" + filename),
-            TerminologyEntry.class));
-        terminologyEntries.put(terminology_entry.getId(), terminology_entry);
-        categoryEntries.add(new CategoryEntry(terminology_entry.getId(),
-            terminology_entry.getDisplay()));
+        var terminologyEntry = (objectMapper.readValue(
+                new URL("file:" + uiProfilePath + "/" + filename), TerminologyEntry.class));
+        terminologyEntries.put(terminologyEntry.getId(), terminologyEntry);
+        categoryEntries.add(new CategoryEntry(terminologyEntry));
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -69,8 +70,6 @@ public class TerminologyService {
   }
 
   private void generateTerminologyEntriesWithOnlyDirectChildren(TerminologyEntry terminologyTree) {
-
-
     var entryWithOnlyDirectChildren = TerminologyEntry.copyWithDirectChildren(terminologyTree);
     terminologyEntriesWithOnlyDirectChildren
         .put(entryWithOnlyDirectChildren.getId(), entryWithOnlyDirectChildren);
@@ -79,21 +78,23 @@ public class TerminologyService {
     }
   }
 
-  private Set<TerminologyEntry> getSelectableEntries(TerminologyEntry terminologyEntry) {
+  private Set<TerminologyEntry> extractSelectableEntries(TerminologyEntry terminologyEntry) {
     Set<TerminologyEntry> selectableEntries = new HashSet<>();
     if (terminologyEntry.isSelectable()) {
-      selectableEntries.add(terminologyEntry);
+      selectableEntries.add(TerminologyEntry.copyWithoutChildren(terminologyEntry));
     }
     for (var child : terminologyEntry.getChildren()) {
-      selectableEntries.addAll(getSelectableEntries(child));
+      selectableEntries.addAll(extractSelectableEntries(child));
     }
     return selectableEntries;
   }
 
   private void generateSelectableEntriesByCategory() {
-    for (var terminologyEntry : terminologyEntries.values()) {
-      selectableEntriesByCategory
-          .put(terminologyEntry.getId(), getSelectableEntries(terminologyEntry));
+    for (var categoryTerminologyEntry : terminologyEntries.values()) {
+      CategoryEntry categoryEntry = new CategoryEntry(categoryTerminologyEntry);
+
+      extractSelectableEntries(categoryTerminologyEntry).forEach(entry ->
+              selectableEntriesWithCategory.add(new TerminologyEntryWithCategory(entry, categoryEntry)));
     }
   }
 
@@ -108,24 +109,28 @@ public class TerminologyService {
   }
 
   public List<TerminologyEntry> getSelectableEntries(String query, UUID categoryId) {
-    if (categoryId != null) {
-      return selectableEntriesByCategory.get(categoryId).stream()
+    return selectableEntriesWithCategory.stream()
+          .filter(terminologyEntryWithCategory ->
+                  matchesCategoryId(categoryId, terminologyEntryWithCategory.getCategoryEntry()))
+          .map(entry -> TerminologyEntry.copyWithoutChildren(entry.getTerminologyEntry()))
           .filter((terminologyEntry -> matchesQuery(query, terminologyEntry)))
           .collect(Collectors.toList());
-    } else {
-      Set<TerminologyEntry> allSelectableEntries = new HashSet<>();
-      for (var selectableEntries : selectableEntriesByCategory.values()) {
-        allSelectableEntries.addAll(selectableEntries);
-      }
-      return allSelectableEntries.stream()
-          .filter((terminologyEntry -> matchesQuery(query, terminologyEntry)))
-          .collect(Collectors.toList());
-    }
+  }
+
+  private boolean matchesCategoryId(UUID categoryId, CategoryEntry categoryEntry) {
+    return categoryEntry.getCatId().equals(categoryId) || categoryId == null;
   }
 
   private boolean matchesQuery(String query, TerminologyEntry terminologyEntry) {
     return terminologyEntry.getDisplay().toLowerCase().contains(query.toLowerCase()) ||
         (terminologyEntry.getTermCode() != null && terminologyEntry.getTermCode().getCode()
             .contains(query));
+  }
+
+  @AllArgsConstructor
+  @Getter
+  private static class TerminologyEntryWithCategory {
+    private final TerminologyEntry terminologyEntry;
+    private final CategoryEntry categoryEntry;
   }
 }
