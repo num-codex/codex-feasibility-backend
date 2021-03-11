@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.IOException;
 import java.util.List;
 
 @Configuration
@@ -22,18 +23,15 @@ public class BrokerClientProducer {
 
   private final ResultRepository resultRepository;
 
-/*
-  //TODO: integrate when DSFBrokerClient can be autowired safely
-  @Autowired
-  @Qualifier("dsf")
-*/
+  /*
+    //TODO: integrate when DSFBrokerClient can be autowired safely
+    @Autowired
+    @Qualifier("dsf")
+  */
   private BrokerClient dsfBrokerClient;
 
-/*
-  //TODO: integrate when AktinBrokerClient can be autowired safely
   @Autowired
   @Qualifier("aktin")
-*/
   private BrokerClient aktinBrokerClient;
 
   public BrokerClientProducer(@Autowired ResultRepository resultRepository) {
@@ -42,26 +40,28 @@ public class BrokerClientProducer {
 
   @Qualifier("applied")
   @Bean
-  public BrokerClient createBrokerClient(@Value("${app.broker-client}") String type) {
+  public BrokerClient createBrokerClient(@Value("${app.broker-client}") String type) throws IOException {
+    BrokerClient brokerClient = null;
+
     if (StringUtils.equalsIgnoreCase(type, CLIENT_TYPE_DSF)) {
-      return dsfBrokerClient;
+      brokerClient = dsfBrokerClient;
     }
 
     if (StringUtils.equalsIgnoreCase(type, CLIENT_TYPE_AKTIN)) {
-      return aktinBrokerClient;
+      brokerClient = aktinBrokerClient;
     }
 
     if (StringUtils.equalsIgnoreCase(type, CLIENT_TYPE_MOCK)) {
-      return getMockBrokerClient();
+      brokerClient = new MockBrokerClient();
     }
 
-    throw new IllegalStateException(
-        String.format(
-            "No Broker Client configured for type '%s'. Allowed types are %s", type, List.of(CLIENT_TYPE_DSF, CLIENT_TYPE_AKTIN, CLIENT_TYPE_MOCK)));
-  }
+    if (brokerClient == null) {
+      throw new IllegalStateException(
+          String.format(
+              "No Broker Client configured for type '%s'. Allowed types are %s",
+              type, List.of(CLIENT_TYPE_DSF, CLIENT_TYPE_AKTIN, CLIENT_TYPE_MOCK)));
+    }
 
-  private MockBrokerClient getMockBrokerClient() {
-    MockBrokerClient brokerClient = new MockBrokerClient();
     brokerClient.addQueryStatusListener(
         new QueryStatusListenerImpl(this.resultRepository, brokerClient));
 

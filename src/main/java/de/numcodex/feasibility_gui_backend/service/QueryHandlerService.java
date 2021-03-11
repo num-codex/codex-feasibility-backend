@@ -40,19 +40,20 @@ public class QueryHandlerService {
   public String runQuery(StructuredQuery structuredQuery)
       throws UnsupportedMediaTypeException, QueryNotFoundException, IOException {
 
+    String structuredQueryContent = OBJECT_MAPPER.writeValueAsString(structuredQuery);
+
     var queryId = this.brokerClient.createQuery();
     var query = new Query();
     query.setQueryId(queryId);
-    query.setStructuredQuery(
-        OBJECT_MAPPER.readTree(OBJECT_MAPPER.writeValueAsString(structuredQuery)));
+    query.setStructuredQuery(OBJECT_MAPPER.readTree(structuredQueryContent));
 
-    String cqlContent = getCqlContent();
+    this.brokerClient.addQueryDefinition(queryId, MEDIA_TYPE_FHIR, structuredQueryContent);
+
+    String cqlContent = getCqlContent(structuredQuery);
     this.brokerClient.addQueryDefinition(queryId, MEDIA_TYPE_CQL, cqlContent);
-    query.getContents().put(MEDIA_TYPE_CQL, cqlContent);
 
-    String fhirContent = getFhirContent();
+    String fhirContent = getFhirContent(structuredQuery);
     this.brokerClient.addQueryDefinition(queryId, MEDIA_TYPE_FHIR, fhirContent);
-    query.getContents().put(MEDIA_TYPE_FHIR, fhirContent);
 
     this.brokerClient.publishQuery(queryId);
     this.queryRepository.save(query);
@@ -61,13 +62,13 @@ public class QueryHandlerService {
   }
 
   // TODO: implement using QueryBuilderCql
-  private String getCqlContent() {
+  private String getCqlContent(StructuredQuery structuredQuery) {
     // return getQueryContent(...);
     return "CQL query";
   }
 
   // TODO: implement using QueryBuilderFhir
-  private String getFhirContent() {
+  private String getFhirContent(StructuredQuery structuredQuery) {
     // return getQueryContent(...);
     return "FHIR Search query";
   }
@@ -96,8 +97,8 @@ public class QueryHandlerService {
     return result;
   }
 
-  public String getQueryContent(QueryBuilder queryBuilder) {
+  public String getQueryContent(QueryBuilder queryBuilder, StructuredQuery structuredQuery) {
     // TODO: adjust to restructuring
-    return queryBuilder.getQueryContent(null);
+    return queryBuilder.getQueryContent(structuredQuery);
   }
 }

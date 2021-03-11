@@ -34,8 +34,10 @@ class FeasibilityGuiBackendApplicationTests {
     var queryService = new QueryHandlerService();
     var cqlBuilder = new QueryBuilderCQL();
     var fhirBuilder = new QueryBuilderFHIR();
-    Assertions.assertEquals("FHIRQuery", queryService.getQueryContent(fhirBuilder));
-    Assertions.assertEquals("CQLQuery", queryService.getQueryContent(cqlBuilder));
+    var structuredQuery = new StructuredQuery();
+
+    Assertions.assertEquals("FHIRQuery", queryService.getQueryContent(fhirBuilder, structuredQuery));
+    Assertions.assertEquals("CQLQuery", queryService.getQueryContent(cqlBuilder, structuredQuery));
   }
 
 

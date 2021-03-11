@@ -70,8 +70,8 @@ de:
     FeasibilityGuiBackend:
       aktin:
         broker:
-          baseUrl: ${AKTIN_BROKER_BASE_URL}
-          apiKey: ${AKTIN_BROKER_API_KEY}
+          baseUrl: 'AKTIN_BROKER_BASE_URL'
+          apiKey: 'AKTIN_BROKER_API_KEY'
       dsf:
         security:
           certificate: ${DSF_SECURITY_CACERT}

@@ -1,19 +1,17 @@
 package de.numcodex.feasibility_gui_backend.service.query_executor.impl.aktin;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.aktin.broker.client2.BrokerAdmin2;
-import org.aktin.broker.xml.Node;
-import org.aktin.broker.xml.RequestStatusInfo;
-
 import de.numcodex.feasibility_gui_backend.service.query_executor.BrokerClient;
 import de.numcodex.feasibility_gui_backend.service.query_executor.QueryNotFoundException;
 import de.numcodex.feasibility_gui_backend.service.query_executor.QueryStatusListener;
 import de.numcodex.feasibility_gui_backend.service.query_executor.SiteNotFoundException;
-import de.numcodex.feasibility_gui_backend.service.query_executor.UnsupportedMediaTypeException;
 import lombok.AllArgsConstructor;
+import org.aktin.broker.client2.BrokerAdmin2;
+import org.aktin.broker.xml.Node;
+import org.aktin.broker.xml.RequestStatusInfo;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * CODEX middleware controller implementation via AKTIN broker.
@@ -34,13 +32,13 @@ public class AktinBrokerClient implements BrokerClient {
 		return Integer.toString(queryId);
 	}
 	int unwrapQueryId(String queryId) {
-		return Integer.valueOf(queryId);
+		return Integer.parseInt(queryId);
 	}
 	String wrapSiteId(int siteId) {
 		return Integer.toString(siteId);
 	}
 	int unwrapSiteId(String siteId) {
-		return Integer.valueOf(siteId);
+		return Integer.parseInt(siteId);
 	}
 
 	@Override
@@ -50,29 +48,29 @@ public class AktinBrokerClient implements BrokerClient {
 
 	@Override
 	public void addQueryDefinition(String queryId, String mediaType, String content)
-			throws QueryNotFoundException, UnsupportedMediaTypeException, IOException {
+			throws IOException {
 		delegate.putRequestDefinition(unwrapQueryId(queryId), mediaType, content);
 		
 	}
 
 	@Override
-	public void publishQuery(String queryId) throws QueryNotFoundException, IOException {
+	public void publishQuery(String queryId) throws IOException {
 		delegate.publishRequest(unwrapQueryId(queryId));
 	}
 
 	@Override
-	public void closeQuery(String queryId) throws QueryNotFoundException, IOException {
+	public void closeQuery(String queryId) throws IOException {
 		delegate.closeRequest(unwrapQueryId(queryId));
 	}
 
 	@Override
 	public int getResultFeasibility(String queryId, String siteId)
-			throws QueryNotFoundException, SiteNotFoundException, IOException {
+			throws SiteNotFoundException, IOException {
 		String result = delegate.getResultString(unwrapQueryId(queryId), unwrapSiteId(siteId));
 		if( result == null ) {
 			throw new SiteNotFoundException(queryId, siteId);
 		}
-		return Integer.valueOf(result);
+		return Integer.parseInt(result);
 	}
 
 	@Override
