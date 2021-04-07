@@ -1,8 +1,6 @@
 package de.numcodex.feasibility_gui_backend.service;
 
-import static de.numcodex.feasibility_gui_backend.service.QueryHandlerService.UNKNOWN_SITE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,22 +18,20 @@ import de.numcodex.feasibility_gui_backend.service.query_builder.QueryBuilderExc
 import de.numcodex.feasibility_gui_backend.service.query_executor.BrokerClient;
 import de.numcodex.feasibility_gui_backend.service.query_executor.QueryNotFoundException;
 import de.numcodex.feasibility_gui_backend.service.query_executor.QueryStatusListener;
-import de.numcodex.feasibility_gui_backend.service.query_executor.QueryStatusListenerImpl;
 import de.numcodex.feasibility_gui_backend.service.query_executor.SiteNotFoundException;
 import de.numcodex.feasibility_gui_backend.service.query_executor.UnsupportedMediaTypeException;
 import java.io.IOException;
 import java.util.List;
-import org.junit.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 
 @ExtendWith(MockitoExtension.class)
 public class QueryHandlerServiceTest {
+
 
   @Mock
   private QueryRepository queryRepository;
@@ -62,7 +58,6 @@ public class QueryHandlerServiceTest {
 
   @BeforeEach
   public void setup() {
-    MockitoAnnotations.openMocks(this);
     queryHandlerService = new QueryHandlerService(queryRepository,
         resultRepository, brokerClient, objectMapper, queryStatusListener, cqlQueryBuilder,
         fhirQueryBuilder, true, true);
@@ -74,7 +69,7 @@ public class QueryHandlerServiceTest {
       throws IOException, UnsupportedMediaTypeException, QueryNotFoundException, QueryBuilderException {
     var structuredQuery = new StructuredQuery();
     queryHandlerService.runQuery(structuredQuery);
-    verify(brokerClient).addQueryStatusListener(any(QueryStatusListenerImpl.class));
+    verify(brokerClient).addQueryStatusListener(queryStatusListener);
   }
 
   @Test
@@ -83,7 +78,7 @@ public class QueryHandlerServiceTest {
     var structuredQuery = new StructuredQuery();
     queryHandlerService.runQuery(structuredQuery);
     queryHandlerService.runQuery(structuredQuery);
-    verify(brokerClient, times(1)).addQueryStatusListener(any(QueryStatusListenerImpl.class));
+    verify(brokerClient, times(1)).addQueryStatusListener(queryStatusListener);
   }
 
   @Test
@@ -144,7 +139,6 @@ public class QueryHandlerServiceTest {
     mockResult.setQueryId("42");
     when(resultRepository.findByQueryId("42")).thenReturn(List.of(mockResult));
     when(brokerClient.getSiteName("LübeckId")).thenReturn("Lübeck");
-
     var expectedQueryResult = new QueryResult();
     expectedQueryResult.setQueryId("42");
     expectedQueryResult.setTotalNumberOfPatients(5);
@@ -168,7 +162,7 @@ public class QueryHandlerServiceTest {
     when(brokerClient.getSiteName("LübeckId")).thenThrow(SiteNotFoundException.class);
 
     var queryResult = queryHandlerService.getQueryResult("42");
-    assertEquals(UNKNOWN_SITE, queryResult.getResultLines().get(0).getSiteName());
+    assertEquals("Unbekannter Standort", queryResult.getResultLines().get(0).getSiteName());
   }
 
   @Test
