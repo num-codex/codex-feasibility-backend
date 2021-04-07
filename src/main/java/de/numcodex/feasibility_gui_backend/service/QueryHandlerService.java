@@ -31,7 +31,7 @@ public class QueryHandlerService {
   private static final String MEDIA_TYPE_FHIR = "text/fhir-codex";
 
 
-  static final String UNKNOWN_SITE = "Unbekannter Standort";
+  private static final String UNKNOWN_SITE = "Unbekannter Standort";
 
   private final ObjectMapper objectMapper;
 
@@ -47,12 +47,11 @@ public class QueryHandlerService {
   private boolean brokerQueryStatusListenerConfigured;
 
 
-
   public QueryHandlerService(QueryRepository queryRepository, ResultRepository resultRepository,
-                             @Qualifier("applied") BrokerClient brokerClient,
-                             ObjectMapper objectMapper, QueryStatusListener queryStatusListener,
-                             @Qualifier("cql") QueryBuilder cqlQueryBuilder,
-                             @Qualifier("fhir") QueryBuilder fhirQueryBuilder,
+      @Qualifier("applied") BrokerClient brokerClient,
+      ObjectMapper objectMapper, QueryStatusListener queryStatusListener,
+      @Qualifier("cql") QueryBuilder cqlQueryBuilder,
+      @Qualifier("fhir") QueryBuilder fhirQueryBuilder,
       @Value("${app.fhirTranslationEnabled}") boolean fhirTranslateEnabled,
       @Value("${app.cqlTranslationEnabled}") boolean cqlTranslateEnabled) {
     this.queryRepository = Objects.requireNonNull(queryRepository);
@@ -68,11 +67,11 @@ public class QueryHandlerService {
   }
 
   public String runQuery(StructuredQuery structuredQuery)
-          throws UnsupportedMediaTypeException, QueryNotFoundException, IOException, QueryBuilderException {
+      throws UnsupportedMediaTypeException, QueryNotFoundException, IOException, QueryBuilderException {
 
     //TODO: Should not be here
     addQueryStatusListener();
-    Query query = createQuery();
+    var query = createQuery();
     addQueryContent(structuredQuery, query);
     sendQuery(query);
     this.queryRepository.save(query);
@@ -83,9 +82,7 @@ public class QueryHandlerService {
   // TODO: maybe do this using a post construct method (think about middleware availability on startup + potential backoff!)
   private void addQueryStatusListener() throws IOException {
     if (!brokerQueryStatusListenerConfigured) {
-      brokerClient.addQueryStatusListener(
-          new QueryStatusListenerImpl(resultRepository, brokerClient)
-      );
+      brokerClient.addQueryStatusListener(queryStatusListener);
       brokerQueryStatusListenerConfigured = true;
     }
   }
@@ -108,17 +105,17 @@ public class QueryHandlerService {
   private void addQueryContent(StructuredQuery structuredQuery, Query query)
       throws IOException, QueryBuilderException {
     addSqQuery(query, structuredQuery);
-    if(cqlTranslateEnabled) {
+    if (cqlTranslateEnabled) {
       addCqlQuery(query, structuredQuery);
     }
-    if(fhirTranslateEnabled) {
+    if (fhirTranslateEnabled) {
       addFhirQuery(query, structuredQuery);
     }
   }
 
   private void addSqQuery(Query query, StructuredQuery structuredQuery)
       throws IOException {
-    var sqContent = (objectMapper.writeValueAsString(structuredQuery));
+    var sqContent = objectMapper.writeValueAsString(structuredQuery);
     query.getContents().put(MEDIA_TYPE_STRUCT_QUERY, sqContent);
   }
 

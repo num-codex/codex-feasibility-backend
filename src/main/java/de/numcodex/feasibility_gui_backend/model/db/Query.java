@@ -1,6 +1,5 @@
 package de.numcodex.feasibility_gui_backend.model.db;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.Column;
@@ -10,7 +9,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import lombok.Data;
-import org.hibernate.annotations.Type;
 
 @Data
 @Entity
