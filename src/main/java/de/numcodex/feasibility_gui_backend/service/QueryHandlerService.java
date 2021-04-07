@@ -13,6 +13,7 @@ import de.numcodex.feasibility_gui_backend.service.query_builder.QueryBuilderExc
 import de.numcodex.feasibility_gui_backend.service.query_executor.BrokerClient;
 import de.numcodex.feasibility_gui_backend.service.query_executor.QueryNotFoundException;
 import de.numcodex.feasibility_gui_backend.service.query_executor.QueryStatusListener;
+import de.numcodex.feasibility_gui_backend.service.query_executor.QueryStatusListenerImpl;
 import de.numcodex.feasibility_gui_backend.service.query_executor.SiteNotFoundException;
 import de.numcodex.feasibility_gui_backend.service.query_executor.UnsupportedMediaTypeException;
 import java.io.IOException;
@@ -30,9 +31,7 @@ public class QueryHandlerService {
   private static final String MEDIA_TYPE_FHIR = "text/fhir-codex";
 
 
-
-
-  private static final String UNKNOWN_SITE = "Unbekannter Standort";
+  static final String UNKNOWN_SITE = "Unbekannter Standort";
 
   private final ObjectMapper objectMapper;
 
@@ -71,45 +70,76 @@ public class QueryHandlerService {
   public String runQuery(StructuredQuery structuredQuery)
           throws UnsupportedMediaTypeException, QueryNotFoundException, IOException, QueryBuilderException {
 
-    // TODO: maybe do this using a post construct method (think about middleware availability on startup + potential backoff!)
-    if (!brokerQueryStatusListenerConfigured) {
-        brokerClient.addQueryStatusListener(queryStatusListener);
-        brokerQueryStatusListenerConfigured = true;
-    }
+    //TODO: Should not be here
+    addQueryStatusListener();
+    Query query = createQuery();
+    addQueryContent(structuredQuery, query);
+    sendQuery(query);
+    this.queryRepository.save(query);
 
+    return query.getQueryId();
+  }
+
+  // TODO: maybe do this using a post construct method (think about middleware availability on startup + potential backoff!)
+  private void addQueryStatusListener() throws IOException {
+    if (!brokerQueryStatusListenerConfigured) {
+      brokerClient.addQueryStatusListener(
+          new QueryStatusListenerImpl(resultRepository, brokerClient)
+      );
+      brokerQueryStatusListenerConfigured = true;
+    }
+  }
+
+  private Query createQuery() throws IOException {
     var queryId = this.brokerClient.createQuery();
     var query = new Query();
     query.setQueryId(queryId);
-
-    String structuredQueryStr = objectMapper.writeValueAsString(structuredQuery);
-    query.setStructuredQuery(objectMapper.readTree(structuredQueryStr));
-
-    String structQueryContent = objectMapper.writeValueAsString(structuredQuery);
-    this.brokerClient.addQueryDefinition(queryId, MEDIA_TYPE_STRUCT_QUERY, structQueryContent);
-    query.getContents().put(MEDIA_TYPE_STRUCT_QUERY, structQueryContent);
-
-
-    if (cqlTranslateEnabled) {
-      var cqlContent = cqlQueryBuilder.getQueryContent(structuredQuery);
-      this.brokerClient.addQueryDefinition(queryId, MEDIA_TYPE_CQL, cqlContent);
-      query.getContents().put(MEDIA_TYPE_CQL, cqlContent);
-    }
-
-    if (fhirTranslateEnabled) {
-      String fhirContent = getFhirContent(structuredQuery);
-      this.brokerClient.addQueryDefinition(queryId, MEDIA_TYPE_FHIR, fhirContent);
-      query.getContents().put(MEDIA_TYPE_FHIR, fhirContent);
-    }
-
-    this.brokerClient.publishQuery(queryId);
-    this.queryRepository.save(query);
-
-    return queryId;
+    return query;
   }
 
+  private void sendQuery(Query query)
+      throws QueryNotFoundException, UnsupportedMediaTypeException, IOException {
+    for (var entry : query.getContents().entrySet()) {
+      this.brokerClient.addQueryDefinition(query.getQueryId(), entry.getKey(), entry.getValue());
+    }
+    this.brokerClient.publishQuery(query.getQueryId());
+  }
+
+  private void addQueryContent(StructuredQuery structuredQuery, Query query)
+      throws IOException, QueryBuilderException {
+    addSqQuery(query, structuredQuery);
+    if(cqlTranslateEnabled) {
+      addCqlQuery(query, structuredQuery);
+    }
+    if(fhirTranslateEnabled) {
+      addFhirQuery(query, structuredQuery);
+    }
+  }
+
+  private void addSqQuery(Query query, StructuredQuery structuredQuery)
+      throws IOException {
+    var sqContent = (objectMapper.writeValueAsString(structuredQuery));
+    query.getContents().put(MEDIA_TYPE_STRUCT_QUERY, sqContent);
+  }
+
+  private void addFhirQuery(Query query, StructuredQuery structuredQuery)
+      throws QueryBuilderException {
+    var fhirContent = getFhirContent(structuredQuery);
+    query.getContents().put(MEDIA_TYPE_FHIR, fhirContent);
+  }
+
+  private void addCqlQuery(Query query, StructuredQuery structuredQuery)
+      throws QueryBuilderException {
+    var cqlContent = getCqlContent(structuredQuery);
+    query.getContents().put(MEDIA_TYPE_CQL, cqlContent);
+  }
 
   private String getFhirContent(StructuredQuery structuredQuery) throws QueryBuilderException {
     return this.fhirQueryBuilder.getQueryContent(structuredQuery);
+  }
+
+  private String getCqlContent(StructuredQuery structuredQuery) throws QueryBuilderException {
+    return this.cqlQueryBuilder.getQueryContent(structuredQuery);
   }
 
   public QueryResult getQueryResult(String queryId) {

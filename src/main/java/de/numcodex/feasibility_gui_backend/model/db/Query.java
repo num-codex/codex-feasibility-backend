@@ -22,9 +22,6 @@ public class Query {
 
   private String queryId;
 
-  @Type(type = "json")
-  private JsonNode structuredQuery;
-
   @ElementCollection
   @Column(columnDefinition="TEXT")
   private Map<String, String> contents = new HashMap<>();
