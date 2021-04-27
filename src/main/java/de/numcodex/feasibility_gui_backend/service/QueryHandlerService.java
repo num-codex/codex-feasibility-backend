@@ -116,6 +116,8 @@ public class QueryHandlerService {
   private void addSqQuery(Query query, StructuredQuery structuredQuery)
       throws IOException {
     var sqContent = objectMapper.writeValueAsString(structuredQuery);
+    System.out.println("#######struct query #####");
+    System.out.println(sqContent);
     query.getContents().put(MEDIA_TYPE_STRUCT_QUERY, sqContent);
   }
 

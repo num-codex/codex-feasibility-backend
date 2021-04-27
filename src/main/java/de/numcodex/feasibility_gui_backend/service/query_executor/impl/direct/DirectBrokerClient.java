@@ -14,15 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class DirectBrokerClient implements BrokerClient {
 
-  private static final String SITE_1_NAME ="Lübeck";
-  private static final String SITE_2_NAME ="Erlangen";
-  private static final String SITE_3_NAME ="Frankfurt";
-  private static final String SITE_4_NAME ="Leipzig";
-
+  private static final String SITE_1_NAME ="Erlangen";
   private static final String SITE_1_ID ="1";
-  private static final String SITE_2_ID ="2";
-  private static final String SITE_3_ID ="3";
-  private static final String SITE_4_ID ="4";
+
 
 
   @Autowired
@@ -58,9 +52,7 @@ public class DirectBrokerClient implements BrokerClient {
     var query = findQuery(queryId);
 
     runResultThread(SITE_1_ID, query);
-    runResultThread(SITE_2_ID, query);
-    runResultThread(SITE_3_ID, query);
-    runResultThread(SITE_4_ID, query);
+
   }
 
   @Override
@@ -92,9 +84,6 @@ public class DirectBrokerClient implements BrokerClient {
   public String getSiteName(String siteId) {
     return switch (siteId) {
       case SITE_1_ID -> SITE_1_NAME;
-      case SITE_2_ID -> SITE_2_NAME;
-      case SITE_3_ID -> SITE_3_NAME;
-      case SITE_4_ID -> SITE_4_NAME;
       default -> "";
     };
   }
