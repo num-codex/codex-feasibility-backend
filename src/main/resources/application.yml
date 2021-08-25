@@ -19,7 +19,9 @@ spring:
           jackis:
             jsonintegration:
               hibernate: CustomPostgreSQL95Dialect
-
+springdoc:
+  swagger-ui:
+    url: /api-doc.yaml
 
 app:
   # AKTIN or DSF or MOCK or DIRECT
