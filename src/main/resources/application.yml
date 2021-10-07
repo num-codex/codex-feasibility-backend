@@ -42,6 +42,10 @@ app:
       keystore:
         p12file: ${DSF_SECURITY_KEYSTORE_P12FILE}
         password: ${DSF_SECURITY_KEYSTORE_PASSWORD}
+    proxy:
+      host: ${DSF_PROXY_HOST:}
+      username: ${DSF_PROXY_USERNAME:}
+      passowrd: ${DSF_PROXY_PASSWORD:}
     webservice:
       baseUrl: ${DSF_WEBSERVICE_BASE_URL}
       readTimeout: 20000
@@ -78,6 +82,6 @@ logging:
 
 cors:
   allowedOrigins:
-    - "*"
+  - "*"
 
 
