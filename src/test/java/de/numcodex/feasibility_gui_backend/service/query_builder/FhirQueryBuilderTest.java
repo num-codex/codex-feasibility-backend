@@ -2,7 +2,6 @@ package de.numcodex.feasibility_gui_backend.service.query_builder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import de.numcodex.feasibility_gui_backend.model.query.StructuredQuery;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -146,15 +145,12 @@ class FhirQueryBuilderTest {
 
 
     var objectMapper = new ObjectMapper();
-    objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     var test = objectMapper.readValue(testQuery, StructuredQuery.class);
     var jsonString = objectMapper.writeValueAsString(test);
-    System.out.println(jsonString);
-    System.out.println(testQuery);
-    System.out.println(testQuery.equals(jsonString));
-    assert(jsonString.contains("attributeCode"));
-    assert(jsonString.contains("exclusionCriteria"));
-
+    assert (jsonString.contains("attributeCode"));
+    assert (jsonString.contains("exclusionCriteria"));
+    assert (jsonString.contains("timeRestriction"));
+    assert (jsonString.contains("attributeCode"));
   }
 
 }

@@ -2,10 +2,8 @@ package de.numcodex.feasibility_gui_backend.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import de.numcodex.feasibility_gui_backend.model.query.StructuredQuery;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 
 public class StructuredQueryV2ParserTest {
 
@@ -140,11 +138,12 @@ public class StructuredQueryV2ParserTest {
         }""";
 
     var objectMapper = new ObjectMapper();
-    objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     var test = objectMapper.readValue(testQuery, StructuredQuery.class);
     var jsonString = objectMapper.writeValueAsString(test);
     assert (jsonString.contains("attributeCode"));
     assert (jsonString.contains("exclusionCriteria"));
+    assert (jsonString.contains("timeRestriction"));
+    assert (jsonString.contains("attributeCode"));
 
   }
 
