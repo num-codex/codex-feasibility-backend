@@ -26,7 +26,7 @@ class FhirQueryBuilderTestIT {
                 "inclusionCriteria": [
                   [
                     {
-                      "termCode": [{
+                      "termCodes": [{
                         "code": "29463-7",
                         "system": "http://loinc.org",
                         "version": "v1",

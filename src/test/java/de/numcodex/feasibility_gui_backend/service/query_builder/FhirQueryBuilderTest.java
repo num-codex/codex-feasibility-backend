@@ -20,7 +20,7 @@ class FhirQueryBuilderTest {
 {
   "version" : "http://to_be_decided.com/draft-2/schema#",
   "inclusionCriteria" : [ [ {
-    "termCode" : [ {
+    "termCodes" : [ {
       "code" : "LL2191-6",
       "system" : "http://loinc.org",
       "display" : "Geschlecht"
@@ -40,7 +40,7 @@ class FhirQueryBuilderTest {
       } ]
     }
   } ], [ {
-    "termCode" : [ {
+    "termCodes" : [ {
       "code" : "30525-0",
       "system" : "http://loinc.org",
       "display" : "Alter"
@@ -55,13 +55,13 @@ class FhirQueryBuilderTest {
       "value" : 18.0
     }
   } ], [ {
-    "termCode" : [ {
+    "termCodes" : [ {
       "code" : "F00",
       "system" : "http://fhir.de/CodeSystem/dimdi/icd-10-gm",
       "display" : "F00"
     } ]
   }, {
-    "termCode" : [ {
+    "termCodes" : [ {
       "code" : "F09",
       "system" : "http://fhir.de/CodeSystem/dimdi/icd-10-gm",
       "display" : "F09"
@@ -72,7 +72,7 @@ class FhirQueryBuilderTest {
     }
   } ] ],
   "exclusionCriteria" : [ [ {
-    "termCode" : [ {
+    "termCodes" : [ {
       "code" : "LL2191-6",
       "system" : "http://loinc.org",
       "display" : "Geschlecht"
@@ -87,7 +87,7 @@ class FhirQueryBuilderTest {
       } ]
     }
   } ], [ {
-    "termCode" : [ {
+    "termCodes" : [ {
       "code" : "30525-0",
       "system" : "http://loinc.org",
       "display" : "Alter"
@@ -102,13 +102,13 @@ class FhirQueryBuilderTest {
       "value" : 65.0
     }
   } ], [ {
-    "termCode" : [ {
+    "termCodes" : [ {
       "code" : "F00.9",
       "system" : "http://fhir.de/CodeSystem/dimdi/icd-10-gm",
       "display" : "F00.9"
     } ]
   }, {
-    "termCode" : [ {
+    "termCodes" : [ {
       "code" : "8310-5",
       "system" : "http://loinc.org",
       "display" : "Körpertemperatur"
@@ -150,7 +150,7 @@ class FhirQueryBuilderTest {
     assert (jsonString.contains("attributeCode"));
     assert (jsonString.contains("exclusionCriteria"));
     assert (jsonString.contains("timeRestriction"));
-    assert (jsonString.contains("attributeCode"));
+    assert (jsonString.contains("attributeFilters"));
   }
 
 }

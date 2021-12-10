@@ -14,7 +14,7 @@ import lombok.Data;
 @JsonInclude(Include.NON_NULL)
 public class Criterion {
 
-  @JsonProperty("termCode")
+  @JsonProperty("termCodes")
   private ArrayList<TermCode> termCodes;
 
   @JsonProperty("attributeFilters")
