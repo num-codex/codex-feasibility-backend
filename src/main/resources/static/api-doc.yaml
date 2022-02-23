@@ -235,10 +235,7 @@ paths:
         content:
           application/json:
             schema:
-              properties:
-                name:
-                  type: string
-                  description: Status to transition to #TODO
+              $ref: "#/components/schemas/QueryStatus"
       responses:
         204:
           description: Query status successfully updated
@@ -329,6 +326,7 @@ components:
           type: integer
           format: int64
           readOnly: true
+          example: 42
         criteria:
           type: string
           required: true
@@ -336,22 +334,23 @@ components:
           type: string
           required: true
         status:
-          type: string
-          description: Query Status
-          enum:
-            - new
-            - running
-            - completed
+          allOf:
+            - $ref: "#/components/schemas/QueryStatus"
+            - properties:
+                string:
+                  type: string
         created_by:
           type: string
           format: uuid
           readOnly: true
           description: researcher auth id
+          example: "abcdefgh-1234-ijkl-5678-mnopqrstuvwx"
         created_at:
           type: string
           format: date-time
           readOnly: true
           description: timestamp when the query was created
+          example: "1998-05-09T17:15:00.000Z"
         results:
           $ref: "#/components/schemas/QueryResult"
     QueryResult:
@@ -370,17 +369,32 @@ components:
           type: string
           description: distinct identifier for a client. Either a site or more precisely one client of a site
         status:
-          type: string
-          description: Query Result Status
-          enum:
-            - success
-            - error
+          allOf:
+            - $ref: "#/components/schemas/QueryResultStatus"
+            - properties:
+                string:
+                  type: string
+
         numberOfPatients:
           type: integer
           format: int64
         errorMessage:
           type: string
           description: if the status is error, specify the cause of the error
+    QueryStatus:
+      type: string
+      description: Query Status
+      enum:
+        - new
+        - running
+        - completed
+      example: completed
+    QueryResultStatus:
+      type: string
+      description: Query Result Status
+      enum:
+        - success
+        - error
   securitySchemes:
     feasibility_auth:
       type: oauth2
