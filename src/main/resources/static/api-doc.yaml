@@ -43,7 +43,6 @@ paths:
                   $ref: '#/components/schemas/Query'
         401:
           description: Unauthorized - please login first
-          content: { }
       security:
         - feasibility_auth:
             - read:query
@@ -74,13 +73,13 @@ paths:
           content: {}
         401:
           description: Unauthorized - please login first
-          content: {}
         403:
           description: Forbidden - insufficient access rights
-          content: {}
         422:
           description: Invalid input
-          content: {}
+          content:
+            text/plain:
+              example: "Query validation failed"
       security:
         - feasibility_auth:
             - write:query
@@ -90,7 +89,7 @@ paths:
       tags:
         - query
       summary: Finds All queries of one or more users
-      description: User identification is done via auth id or email (to be decided)
+      description: User identification is done via auth id
       operationId: findQueriesByUser
       parameters:
         - name: user
@@ -103,6 +102,8 @@ paths:
             type: array
             items:
               type: string
+              format: uuid
+              example: abcdefgh-1234-ijkl-5678-mnopqrstuvwx
       responses:
         200:
           description: successful operation
@@ -114,13 +115,10 @@ paths:
                   $ref: '#/components/schemas/Query'
         401:
           description: Unauthorized - please login first
-          content: {}
         403:
           description: Forbidden - insufficient access rights
-          content: {}
         404:
           description: User not found
-          content: {}
       security:
         - feasibility_auth:
             - read:all
@@ -149,13 +147,10 @@ paths:
                   $ref: '#/components/schemas/Query'
         401:
           description: Unauthorized - please login first
-          content: { }
         403:
           description: Forbidden - insufficient access rights
-          content: {}
         404:
           description: Query not found
-          content: {}
       security:
         - feasibility_auth:
             - read:query
@@ -168,7 +163,7 @@ paths:
       parameters:
         - name: queryId
           in: path
-          description: ID of query to return
+          description: ID of query to update
           required: true
           schema:
             type: integer
@@ -183,19 +178,17 @@ paths:
       responses:
         204:
           description: Query successfully updated
-          content: {}
         401:
           description: Unauthorized - please login first
-          content: {}
         403:
           description: Forbidden - insufficient access rights
-          content: {}
         404:
           description: Query not found
-          content: {}
         422:
           description: Invalid input
-          content: {}
+          content:
+            text/plain:
+              example: "Query validation failed"
       security:
         - feasibility_auth:
             - write:query
@@ -208,7 +201,7 @@ paths:
       parameters:
         - name: queryId
           in: path
-          description: ID of query to return
+          description: ID of query to delete
           required: true
           schema:
             type: integer
@@ -216,16 +209,12 @@ paths:
       responses:
         204:
           description: Query successfully deleted
-          content: {}
         401:
           description: Unauthorized - please login first
-          content: {}
         403:
           description: Forbidden - insufficient access rights
-          content: {}
         404:
           description: Query not found
-          content: {}
       security:
         - feasibility_auth:
             - delete:query
@@ -249,23 +238,18 @@ paths:
               properties:
                 name:
                   type: string
-                  description: Status to transition to
+                  description: Status to transition to #TODO
       responses:
         204:
           description: Query status successfully updated
-          content: {}
         401:
           description: Unauthorized - please login first
-          content: {}
         403:
           description: Forbidden - insufficient access rights
-          content: {}
         404:
           description: Query not found
-          content: {}
         409:
           description: Invalid status transition requested
-          content: {}
       security:
         - feasibility_auth:
             - write:query
@@ -296,13 +280,10 @@ paths:
                   $ref: '#/components/schemas/QueryResult'
         401:
           description: Unauthorized - please login first
-          content: { }
         403:
           description: Forbidden - insufficient access rights
-          content: {}
         404:
           description: Query not found
-          content: {}
       security:
         - feasibility_auth:
             - read:result
@@ -330,16 +311,12 @@ paths:
       responses:
         204:
           description: Query successfully deleted
-          content: {}
         401:
           description: Unauthorized - please login first
-          content: {}
         403:
           description: Forbidden - insufficient access rights
-          content: {}
         404:
           description: Query not found or response not found
-          content: {}
       security:
         - feasibility_auth:
             - delete:result
@@ -351,10 +328,13 @@ components:
         id:
           type: integer
           format: int64
+          readOnly: true
         criteria:
           type: string
+          required: true
         label:
           type: string
+          required: true
         status:
           type: string
           description: Query Status
@@ -362,6 +342,16 @@ components:
             - new
             - running
             - completed
+        created_by:
+          type: string
+          format: uuid
+          readOnly: true
+          description: researcher auth id
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: timestamp when the query was created
         results:
           $ref: "#/components/schemas/QueryResult"
     QueryResult:
